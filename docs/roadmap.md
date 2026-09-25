@@ -1,0 +1,29 @@
+# Hoja de ruta
+
+## Fase 0 — Arquitectura y preparación (actual)
+
+Documentación, límites de seguridad, estructura de monorepo y control verificable de presencia. Sin dependencias, conectores ni servicios operativos.
+
+## Fase 1 — Núcleo seguro mínimo
+
+Crear el esqueleto ejecutable: workspace TypeScript, API mínima de salud, web mínima, configuración validada, PostgreSQL local de desarrollo, migración inicial de tenants/usuarios/membresías, autenticación simulada sólo para pruebas y auditoría básica. Incluye pruebas de aislamiento y CI inicial. No incluye conectores externos ni agentes autónomos.
+
+## Fase 2 — Identidad, autorización y auditoría
+
+OIDC real configurable, modelo OpenFGA inicial, RLS aplicado, cuenta de servicio, decisiones de política y flujo de aprobaciones con trazabilidad.
+
+## Fase 3 — Herramientas y procesos controlados
+
+Registro de herramientas, contrato versionado, worker, workflow durable, sandbox/egress y una herramienta interna no destructiva de referencia.
+
+## Fase 4 — Conocimiento empresarial
+
+Ingestión controlada de documentos, clasificación, almacenamiento, búsqueda por tenant, citación y controles de retención.
+
+## Fase 5 — Agentes supervisados
+
+Orquestación con planes estructurados, presupuestos, gates de política/aprobación, evaluación y una capacidad de recomendación sin efectos externos.
+
+## Fases posteriores
+
+Conectores priorizados por negocio, automatizaciones específicas, monitoreo/anomalías, integraciones de mensajería y visión computacional. Cada una requiere diseño, amenaza, pruebas aisladas y aprobación de alcance.
