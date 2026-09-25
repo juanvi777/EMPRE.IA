@@ -1,0 +1,62 @@
+:root {
+  color: #e7edf7;
+  background: #0b1220;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+}
+
+main {
+  display: grid;
+  gap: 1rem;
+  max-width: 52rem;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 12vh 2rem;
+  align-content: center;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: clamp(3rem, 10vw, 6rem);
+  letter-spacing: -0.06em;
+}
+
+.eyebrow {
+  color: #5eead4;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.intro {
+  max-width: 40rem;
+  color: #bdc9da;
+  font-size: 1.25rem;
+  line-height: 1.6;
+}
+
+.status-card {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #29405f;
+  border-radius: 0.75rem;
+  background: #101b2d;
+}
+
+.status-card p {
+  color: #a9b9cf;
+}

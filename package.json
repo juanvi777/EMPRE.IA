@@ -1,0 +1,26 @@
+{
+  "name": "empre-ia",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.6.0",
+  "engines": {
+    "node": ">=24.11.0 <25",
+    "pnpm": ">=12.6.0 <13"
+  },
+  "scripts": {
+    "build": "pnpm --recursive --if-present run build",
+    "check": "pnpm run check:utf8 && pnpm run format:check && pnpm run lint && pnpm run typecheck && pnpm run test",
+    "check:utf8": "node scripts/check-utf8.mjs",
+    "dev": "pnpm --parallel --filter @empre/api --filter @empre/web dev",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "test": "vitest run",
+    "typecheck": "pnpm --recursive --if-present run typecheck"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.14",
+    "vitest": "5.0.1"
+  }
+}

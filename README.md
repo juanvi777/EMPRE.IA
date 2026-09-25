@@ -4,7 +4,23 @@ Plataforma de inteligencia artificial empresarial multi-tenant, diseñada para c
 
 ## Estado
 
-Fase 0 — arquitectura y preparación. No hay aplicación, conector, credencial ni servicio externo operativo todavía.
+Fase 1 — núcleo técnico mínimo. Incluye una web y API locales, sin conectores, credenciales, base de datos ni acciones empresariales.
+
+## Requisitos
+
+- Node.js 24 LTS (>= 24.11.0)
+- pnpm 12.6.0
+
+## Inicio local
+
+1. Copie `.env.example` a `.env` sólo en su equipo y ajuste valores no sensibles si hace falta.
+2. Ejecute `pnpm install --frozen-lockfile`.
+3. Ejecute `pnpm dev`.
+4. Abra `http://127.0.0.1:3000`; la API responde en `http://127.0.0.1:3001/health`.
+
+## Controles de calidad
+
+`pnpm check` valida codificación UTF-8, formato, lint, tipos y pruebas.
 
 ## Documentación
 
