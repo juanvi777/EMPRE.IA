@@ -74,3 +74,7 @@ Los secretos no se almacenan en estas tablas: `credential_references` sólo cons
 - Diseñe consumidores idempotentes y particione por `tenant_id` cuando el volumen lo requiera.
 - Evite particionar físicamente por tenant de forma prematura; permita tenants dedicados para requisitos regulatorios o de volumen.
 - Mantenga límites de concurrencia, tiempo, tamaño de payload, coste y número de herramientas por ejecución.
+
+## Nota histórica de implementación del núcleo local 0.3.x
+
+Para poder validar el producto sin montar todavía toda la infraestructura objetivo, la versión local utiliza `node:sqlite` como almacenamiento de desarrollo y un RBAC simple en la API. Esto es deliberado y no sustituye la arquitectura objetivo con PostgreSQL/RLS, proveedor de identidad y servicios aislados descrita arriba. El siguiente salto de infraestructura deberá conservar los contratos de aplicación y reforzar las mismas garantías de aislamiento.

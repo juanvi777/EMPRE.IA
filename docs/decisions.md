@@ -55,3 +55,27 @@
 **Decisión:** `.editorconfig` declara UTF-8 y un control de Node valida archivos de texto versionados, incluidos marcadores comunes de texto mal decodificado.
 
 **Razón:** la terminal de Windows puede mostrar UTF-8 mediante una página de códigos incorrecta; el control verifica bytes reales y evita que ese defecto de visualización se convierta en contenido defectuoso.
+
+## ADR-008 — Núcleo de producto antes de conectores externos
+
+**Estado:** aceptada — 2026-09-27.
+
+**Decisión:** terminar primero el núcleo local de EMPRE.IA (identidad, permisos, auditoría, planes, consumo, políticas, perfil de IA y kernel local) antes de integrar Suldery Nails u otro sistema externo.
+
+**Razón:** Suldery será un laboratorio para validar el patrón universal de Connector, no una dependencia del producto. Esto permite demostrar que EMPRE puede conectarse después a distintos sistemas usando el mismo núcleo.
+
+## ADR-009 — Cuatro planes comerciales y consumo medido
+
+**Estado:** propuesta local — 2026-09-27.
+
+**Decisión:** preparar Free, Go, Pro y Business con límites de capacidad y unidades de uso de IA. La facturación real se implementará después.
+
+**Razón:** una plataforma de agentes y herramientas tiene costes variables; medir uso permite separar experiencia de cliente, capacidad y coste operativo sin prometer IA ilimitada de forma irresponsable.
+
+## ADR-010 — Kernel EMPRE independiente del proveedor de modelo
+
+**Estado:** aceptada — 2026-09-27.
+
+**Decisión:** las reglas de identidad, seguridad, contexto, política y auditoría pertenecen al producto EMPRE; el proveedor/modelo LLM se conecta mediante un adaptador posterior.
+
+**Razón:** así el producto no depende arquitectónicamente de un único proveedor y puede evolucionar el motor de IA sin reconstruir la capa empresarial.

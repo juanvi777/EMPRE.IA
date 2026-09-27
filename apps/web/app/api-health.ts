@@ -11,9 +11,9 @@ export type ApiHealthState =
   | { readonly available: true; readonly health: ApiHealth }
   | { readonly available: false; readonly reason: string };
 
-function getApiBaseUrl(value = process.env.NEXT_PUBLIC_API_BASE_URL): URL {
+function getApiBaseUrl(value = process.env.NEXT_PUBLIC_API_BASE_URL ?? (process.env.NODE_ENV === 'production' ? undefined : 'http://127.0.0.1:3001')): URL {
   if (value === undefined || value.length === 0) {
-    throw new Error('NEXT_PUBLIC_API_BASE_URL es obligatoria.');
+    throw new Error('NEXT_PUBLIC_API_BASE_URL es obligatoria en producción.');
   }
 
   const url = new URL(value);

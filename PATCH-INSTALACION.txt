@@ -1,0 +1,38 @@
+EMPRE.IA 0.4.0 — 30/10 / SULDERY READY
+
+1. Haz copia de seguridad de C:\proyectos\EMPRE.IA.
+2. Detén pnpm dev.
+3. Extrae este ZIP sobre C:\proyectos\EMPRE.IA y reemplaza archivos.
+4. NO elimines .data\empreia.sqlite.
+5. Abre PowerShell:
+
+cd "C:\proyectos\EMPRE.IA"
+pnpm install
+pnpm dev
+
+6. Abre http://localhost:3000.
+
+7. Sin Connector:
+   - Análisis, Clientes, Agentes, Tareas y Automatizaciones deben estar bloqueados.
+   - El chat debe explicar cómo conectar el sistema si se pide una operación.
+   - Ventas no se deben inventar.
+
+8. En Integraciones:
+   - usa la URL de la API, no la página HTML pública;
+   - selecciona Suldery Nails;
+   - usa una cuenta de integración dedicada;
+   - pulsa Conectar y verificar;
+   - después pulsa Actualizar lectura real.
+
+9. Para probar escrituras:
+   - crear cita genera aprobación;
+   - aprobar ejecuta en Suldery;
+   - verificar lectura posterior.
+
+10. Para Mercado Pago:
+    - Access Token y webhook secret sólo en .env del backend;
+    - utiliza credenciales de prueba primero;
+    - configura EMPRE_PUBLIC_WEB_URL cuando exista un dominio público HTTPS;
+    - el Link de Pago personal queda como respaldo manual.
+
+No publiques secretos en Git ni en el chat.

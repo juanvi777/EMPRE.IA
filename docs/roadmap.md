@@ -1,3 +1,16 @@
+## 1. Núcleo local real
+
+- Autenticación local y sesiones.
+- Multi-tenant base.
+- Roles/permisos.
+- Auditoría.
+- Persistencia SQLite local.
+- Dashboard protegido.
+- Núcleo de identidad, principios y políticas de EMPRE.IA.
+- Catálogo local de 4 planes y control de consumo de IA.
+- Perfil de IA por empresa y política base de aprobación.
+- Kernel conversacional local orientado a intención y contexto empresarial.
+
 # Hoja de ruta
 
 ## Fase 0 — Arquitectura y preparación (actual)
@@ -7,6 +20,12 @@ Documentación, límites de seguridad, estructura de monorepo y control verifica
 ## Fase 1 — Núcleo seguro mínimo
 
 Crear el esqueleto ejecutable: workspace TypeScript, API mínima de salud, web mínima, configuración validada, PostgreSQL local de desarrollo, migración inicial de tenants/usuarios/membresías, autenticación simulada sólo para pruebas y auditoría básica. Incluye pruebas de aislamiento y CI inicial. No incluye conectores externos ni agentes autónomos.
+
+## Fase 1B — Fundamentos de producto y núcleo inteligente local
+
+Esta es la fase activa: consolidar EMPRE como producto SaaS empresarial antes de conectar terceros. Incluye identidad del producto, catálogo Free/Go/Pro/Business, uso/consumo, políticas, perfil de IA, kernel conversacional local y una interfaz que explique el diferencial sin simular capacidades externas.
+
+No incluye facturación real, modelos LLM de producción, conectores externos ni autonomía irrestricta.
 
 ## Fase 2 — Identidad, autorización y auditoría
 

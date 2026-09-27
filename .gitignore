@@ -13,6 +13,26 @@ coverage/
 *.pem
 *.key
 
+# Local database
+.data/
+
 # Local tooling
 .DS_Store
 Thumbs.db
+
+# Local packaging / run artifacts
+.empreia/
+EMPREIA-source-temp/
+EMPRE.IA-source.zip
+
+# Archivos generados
+EMPRE.IA.zip
+
+
+# Archivos generados
+EMPRE.IA.zip
+
+
+# Archivos generados
+EMPRE.IA.zip
+

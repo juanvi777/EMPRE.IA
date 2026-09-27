@@ -1,0 +1,303 @@
+EMPRE.IA — ONE RUN / FASE VISUAL + CALIDAD + GIT
+
+CONTEXTO
+Estás trabajando directamente en:
+C:\proyectos\EMPRE.IA
+
+El repositorio ya contiene:
+- Fase 0: a47dd36
+- Fase 1: 5f40886
+
+No reinicies el proyecto y no destruyas nada de lo existente.
+
+OBJETIVO DE ESTA EJECUCIÓN
+En UNA SOLA EJECUCIÓN, llevar la aplicación web actual a una primera versión visual profesional de EMPRE.IA, inspirada en el archivo design-reference.png que está en la raíz de esta ejecución si existe.
+
+IMPORTANTE:
+Esto NO significa construir todavía toda la plataforma empresarial.
+Esta ejecución corresponde a la primera gran versión de interfaz/producto visible.
+
+NO implementar todavía:
+- WhatsApp real
+- cámaras reales
+- contabilidad real
+- ERP/CRM reales
+- agentes autónomos con acceso real a sistemas
+- credenciales externas reales
+- acciones destructivas
+- pagos
+- producción cloud
+- modificaciones irreversibles de infraestructura
+
+SÍ implementar en esta ejecución:
+- interfaz completa del dashboard de EMPRE.IA;
+- identidad visual;
+- robot/mascota visual;
+- navegación;
+- dashboard;
+- chat visual con la IA;
+- tarjetas KPI;
+- actividad reciente;
+- agentes;
+- integraciones como estado visual/mock claramente identificado;
+- panel de tareas;
+- responsive;
+- modo oscuro y claro;
+- estados vacíos/carga/error;
+- accesibilidad razonable;
+- arquitectura de componentes reutilizables;
+- conexión real al endpoint /health que ya existe;
+- base preparada para conectar datos reales más adelante.
+
+REGLA DE ORO
+No hagas cambios enormes sin verificar.
+Trabaja en pasos internos, pero completa toda esta ejecución antes de terminar.
+No me pidas confirmación por cada archivo.
+Solo detente si encuentras una operación destructiva, una credencial secreta, un conflicto serio de Git o un problema que haga inseguro continuar.
+
+PASO 0 — INSPECCIÓN
+1. Lee AGENTS.md.
+2. Lee docs/architecture.md.
+3. Lee docs/security.md.
+4. Lee docs/multi-tenancy.md.
+5. Lee docs/agents.md.
+6. Lee docs/tools.md.
+7. Lee docs/roadmap.md.
+8. Lee docs/decisions.md.
+9. Revisa git status, git log y la estructura actual.
+10. Confirma que estás en C:\proyectos\EMPRE.IA.
+
+Si AGENTS.md no está siendo detectado automáticamente, busca el archivo y aplica sus instrucciones igualmente. No crees otro archivo equivalente si no es necesario.
+
+PASO 1 — REFERENCIA VISUAL
+Si existe design-reference.png en la raíz, úsalo como referencia visual.
+No lo uses como la interfaz final ni como una imagen que sustituya los componentes.
+La web debe estar construida con React/Next.js y CSS/componentes reales.
+
+Objetivo visual:
+- futurista;
+- premium;
+- tecnológico;
+- empresarial;
+- elegante;
+- fondo oscuro por defecto;
+- glassmorphism moderado;
+- iluminación azul/cian/morado;
+- bordes suaves;
+- profundidad;
+- buena jerarquía tipográfica;
+- microanimaciones discretas;
+- excelente responsive.
+
+Debe sentirse como un producto SaaS empresarial moderno, no como una demo genérica.
+
+PASO 2 — IDENTIDAD EMPRE.IA
+Usa:
+EMPRE.IA
+
+Subtítulo sugerido:
+"Tu empresa, más inteligente"
+
+Crea un sistema visual coherente:
+- logo;
+- tipografía;
+- espaciado;
+- tarjetas;
+- botones;
+- estados;
+- iconografía;
+- sombras;
+- efectos;
+- variables de diseño.
+
+No dependas de imágenes externas para elementos críticos de la interfaz.
+
+PASO 3 — ROBOT
+La mascota oficial es un robot amigable futurista blanco/azul con visor oscuro y detalles luminosos cian.
+
+Debe existir una ruta preparada:
+public/empre-robot.png
+
+Si ya existe un recurso adecuado, reutilízalo.
+Si el entorno de Codex no puede generar un PNG real, NO inventes que lo generaste.
+En ese caso:
+- implementa un componente/placeholder visual limpio;
+- documenta exactamente que falta el PNG final;
+- deja la aplicación preparada para sustituirlo sin cambiar la arquitectura.
+
+Nunca descargues imágenes arbitrarias de Internet para fingir que son el robot oficial.
+
+PASO 4 — DASHBOARD
+Construye como componentes reales:
+
+Sidebar:
+- Inicio
+- Chat con IA
+- Análisis
+- Automatizaciones
+- Clientes
+- Documentos
+- Integraciones
+- Agentes
+- Configuración
+
+Zona de empresa/usuario en sidebar.
+
+Topbar:
+- buscador;
+- notificaciones;
+- ayuda;
+- perfil.
+
+Panel principal:
+- saludo;
+- mensaje de estado;
+- robot;
+- entrada principal para conversar con EMPRE.IA;
+- acciones rápidas.
+
+KPIs:
+- Clientes
+- Ventas
+- Automatizaciones
+- Tareas IA
+
+Secciones:
+- Agentes activos
+- Rendimiento de la IA
+- Integraciones
+- Actividad reciente
+- Tareas IA
+
+Los datos que todavía no procedan de backend deben estar claramente definidos como datos de demostración/locales y encapsulados para poder reemplazarse después.
+
+PASO 5 — CHAT
+Crea una experiencia de chat visual y funcional a nivel de interfaz.
+
+Debe permitir:
+- escribir;
+- enviar;
+- ver estado;
+- mostrar respuesta simulada local;
+- mostrar "procesando";
+- mostrar error;
+- limpiar conversación.
+
+NO conectes todavía un modelo real ni una API de IA externa.
+
+Deja una interfaz clara para conectar posteriormente el motor de agentes.
+
+PASO 6 — RESPONSIVE
+La interfaz debe funcionar correctamente en:
+- desktop;
+- laptop;
+- tablet;
+- móvil.
+
+En móvil:
+- sidebar colapsable;
+- tarjetas adaptables;
+- chat usable;
+- navegación táctil.
+
+No permitas overflow horizontal accidental.
+
+PASO 7 — DARK/LIGHT
+Implementa:
+- dark mode como tema principal;
+- light mode completo.
+
+No hagas un light mode improvisado.
+Todos los componentes deben tener contraste correcto en ambos modos.
+
+PASO 8 — API
+Conserva la integración existente con:
+GET /health
+
+La interfaz debe mostrar correctamente:
+- disponible;
+- comprobando;
+- sin conexión;
+- error.
+
+No expongas secretos ni stack traces.
+
+PASO 9 — CALIDAD
+Antes de terminar ejecuta y corrige todo lo necesario:
+
+- pnpm check
+- pnpm build
+- pruebas disponibles
+- comprobación UTF-8
+- git diff --check
+- pnpm audit --prod
+
+No cambies pruebas para ocultar fallos.
+
+No dejes errores pendientes sin explicarlos.
+
+PASO 10 — SEGURIDAD
+Antes del commit comprueba que no existan:
+- .env reales;
+- API keys;
+- tokens;
+- certificados;
+- claves privadas;
+- secretos hardcodeados.
+
+Si encuentras un secreto real:
+DETENTE antes del commit y no lo subas.
+
+PASO 11 — GIT
+Cuando todo esté verificado:
+
+1. Revisa git status.
+2. Si la rama actual es master y no hay una razón válida para conservarla, cámbiala a main.
+3. No reescribas historial.
+4. No hagas force push.
+5. No borres ramas remotas.
+6. No hagas reset destructivo.
+7. No subas secretos.
+8. Haz un commit dedicado:
+
+feat: build EMPRE.IA futuristic dashboard
+
+9. Comprueba el commit.
+10. Si existe origin y el usuario está autenticado, ejecuta:
+
+git push -u origin main
+
+Si origin no existe:
+- NO inventes una URL;
+- deja el commit local;
+- informa que el código está listo pero falta configurar origin.
+
+Si el push es rechazado:
+- NO uses --force;
+- informa exactamente del rechazo.
+
+PASO 12 — DOCUMENTACIÓN
+Actualiza únicamente la documentación que corresponda para reflejar la nueva interfaz y decisiones.
+No inventes funcionalidades que todavía no existen.
+
+PASO FINAL
+No avances a multi-tenancy, agentes autónomos o integraciones reales.
+
+Entrega un resumen final con:
+
+1. qué cambiaste;
+2. qué archivos importantes creaste/modificaste;
+3. cómo quedó la interfaz;
+4. cómo funciona el modo oscuro/claro;
+5. estado de /health;
+6. pruebas ejecutadas;
+7. resultado de audit;
+8. commit creado;
+9. resultado del push;
+10. pendientes reales.
+
+IMPORTANTE:
+Completa todo lo posible en UNA SOLA EJECUCIÓN.
+No desperdicies turnos preguntando cosas que puedes verificar tú mismo.
+No inventes resultados.
+No declares "listo" si un build, test o push falló.

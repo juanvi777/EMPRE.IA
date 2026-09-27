@@ -8,6 +8,7 @@ export interface ApiConfig {
   readonly logLevel: LogLevel;
   readonly port: number;
   readonly version: string;
+  readonly webOrigins: readonly string[];
 }
 
 export function loadApiConfig(environment: NodeJS.ProcessEnv = process.env): ApiConfig {
@@ -16,7 +17,7 @@ export function loadApiConfig(environment: NodeJS.ProcessEnv = process.env): Api
     throw new Error('NODE_ENV debe ser development, test o production.');
   }
 
-  const port = Number(environment.API_PORT ?? '3001');
+  const port = Number(environment.API_PORT ?? environment.PORT ?? '3001');
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error('API_PORT debe ser un puerto entero entre 1 y 65535.');
   }
@@ -26,16 +27,20 @@ export function loadApiConfig(environment: NodeJS.ProcessEnv = process.env): Api
     throw new Error('API_LOG_LEVEL no es un nivel de logging permitido.');
   }
 
-  const host = environment.API_HOST ?? '127.0.0.1';
+  const host = environment.API_HOST ?? (nodeEnvironment === 'production' ? '0.0.0.0' : '127.0.0.1');
   if (host.trim().length === 0) {
     throw new Error('API_HOST no puede estar vacío.');
   }
+
+  const webOrigins = (environment.EMPRE_WEB_ORIGINS ?? 'http://localhost:3000,http://127.0.0.1:3000')
+    .split(',').map((value) => value.trim()).filter(Boolean);
 
   return {
     environment: nodeEnvironment as ApiConfig['environment'],
     host,
     logLevel: logLevel as LogLevel,
     port,
-    version: environment.npm_package_version ?? '0.1.0',
+    version: environment.npm_package_version ?? '0.6.0',
+    webOrigins,
   };
 }
