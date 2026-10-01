@@ -11,6 +11,8 @@ import { db, rows, row } from '../../infrastructure/db/database.js';
 import { getDashboardSummary, updateAgent, updateAutomation, updateTask } from '../../application/dashboard.js';
 import { createConnector, connectorProbe, getConnectorTools, getConnectors, getPrimaryConnector, hasOperationalConnection, testConnector, executeConnectorTool, type ConnectorAuthMode } from '../../application/connectors.js';
 import { syncMercadoPagoOrder } from '../../application/billing.js';
+import { createIntegrationPlan } from '../../application/integration-planner.js';
+import { AGENTS } from '../../ai/agent-registry.js';
 import type { ApiConfig } from '../../infrastructure/config/environment.js';
 import type { AppUser } from '../../infrastructure/db/database.js';
 
@@ -190,6 +192,24 @@ export function buildApp(config: ApiConfig): FastifyInstance {
     if (!hasPermission(user.id, 'connectors.read')) return reply.code(403).send({ message: 'No tienes permiso para consultar conectores.' });
     const connectors = getConnectors(user.tenantId);
     return reply.send({ connected: hasOperationalConnection(user.tenantId), primary: getPrimaryConnector(user.tenantId), connectors });
+  });
+
+  app.get('/ai/agents', async (request, reply) => {
+    if (!(await requireAuth(request, reply))) return;
+    if (!hasPermission(request.empreUser!.id, 'assistant.use')) return reply.code(403).send({ message: 'No tienes permiso para consultar los agentes de EMPRE.IA.' });
+    return reply.send({ agents: AGENTS });
+  });
+
+  app.post('/connectors/plan', async (request, reply) => {
+    if (!(await requireAuth(request, reply))) return;
+    const user = request.empreUser!;
+    if (!isAdmin(user) || !hasPermission(user.id, 'connectors.write')) return reply.code(403).send({ message: 'Sólo un propietario o administrador puede preparar una integración.' });
+    try {
+      const body = request.body as { url?: string; goal?: string };
+      return reply.send(createIntegrationPlan({ url: String(body.url ?? ''), goal: body.goal }));
+    } catch (error) {
+      return reply.code(400).send({ error: 'INTEGRATION_PLAN_FAILED', message: error instanceof Error ? error.message : 'No se pudo preparar la integración.' });
+    }
   });
 
   app.post('/connectors', async (request, reply) => {

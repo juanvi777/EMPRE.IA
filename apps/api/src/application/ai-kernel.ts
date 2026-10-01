@@ -4,6 +4,7 @@ import { executeConnectorTool, getConnectorTools, getPrimaryConnector, hasOperat
 import { appendAssistantMessage, getAssistantHistory } from './assistant-history.js';
 import { generateWithRealAi, isRealAiConfigured } from './ai-provider.js';
 import { db, row } from '../infrastructure/db/database.js';
+import { routeToAgent } from '../ai/orchestrator.js';
 
 export type AssistantIntent =
   | 'greeting' | 'thanks' | 'capabilities' | 'summary' | 'clients' | 'appointments' | 'portfolio'
@@ -13,6 +14,7 @@ export type AssistantIntent =
 export interface AiKernelResult {
   readonly reply: string;
   readonly intent: AssistantIntent;
+  readonly agent: import('../ai/agent-types.js').AgentName;
   readonly mode: 'local-core' | 'connector' | 'llm';
   readonly usageUnits: number;
   readonly suggestedActions: readonly string[];
@@ -136,10 +138,11 @@ function localReply(tenantId: string, intent: AssistantIntent, connected: boolea
 export async function answerWithKernel(tenantId: string, userId: string, message: string): Promise<AiKernelResult> {
   const clean = message.trim();
   const intent = intentFor(clean);
+  const agent = routeToAgent(clean);
   const usageUnits = Math.max(1, Math.ceil(clean.length / 180));
   if (!canUseAi(tenantId, usageUnits)) {
     const usage = getUsageSnapshot(tenantId);
-    const result: AiKernelResult = { reply: `Has alcanzado el límite mensual de uso de IA de tu plan. Llevas ${usage.used.toLocaleString('es-CO')} de ${usage.limit.toLocaleString('es-CO')} unidades.`, intent: 'plan', mode: 'local-core', usageUnits: 0, suggestedActions: ['Revisar planes', 'Revisar consumo'], dataSource: 'none', provider: 'local-kernel', model: null };
+    const result: AiKernelResult = { agent, reply: `Has alcanzado el límite mensual de uso de IA de tu plan. Llevas ${usage.used.toLocaleString('es-CO')} de ${usage.limit.toLocaleString('es-CO')} unidades.`, intent: 'plan', mode: 'local-core', usageUnits: 0, suggestedActions: ['Revisar planes', 'Revisar consumo'], dataSource: 'none', provider: 'local-kernel', model: null };
     appendAssistantMessage(tenantId, userId, 'user', clean); appendAssistantMessage(tenantId, userId, 'assistant', result.reply); return result;
   }
 
@@ -150,14 +153,14 @@ export async function answerWithKernel(tenantId: string, userId: string, message
   const company = tenantName(tenantId);
 
   if (!connected && requiresBusinessConnector(clean, intent)) {
-    const result = { ...connectionRequired(company), usageUnits };
+    const result = { ...connectionRequired(company), agent, usageUnits };
     appendAssistantMessage(tenantId, userId, 'assistant', result.reply); recordUsage(tenantId, 'assistant.connection-gate', usageUnits, { intent }); return result;
   }
 
   let external = { text: '', dataSource: 'none' as AiKernelResult['dataSource'], mode: 'local-core' as AiKernelResult['mode'] };
   try { external = await buildExternalContext(tenantId, intent); } catch (error) {
     const message = error instanceof Error ? error.message : 'No se pudo consultar el sistema externo.';
-    const result: AiKernelResult = { reply: `No voy a inventar la respuesta. El Connector está configurado, pero la consulta falló: ${message}`, intent: 'connections', mode: 'connector', usageUnits, suggestedActions: ['Probar lectura', 'Revisar Integraciones'], dataSource: 'none', provider: 'local-kernel', model: null };
+    const result: AiKernelResult = { agent, reply: `No voy a inventar la respuesta. El Connector está configurado, pero la consulta falló: ${message}`, intent: 'connections', mode: 'connector', usageUnits, suggestedActions: ['Probar lectura', 'Revisar Integraciones'], dataSource: 'none', provider: 'local-kernel', model: null };
     appendAssistantMessage(tenantId, userId, 'assistant', result.reply); recordUsage(tenantId, 'assistant.external-error', usageUnits, { intent }); return result;
   }
 
@@ -165,12 +168,12 @@ export async function answerWithKernel(tenantId: string, userId: string, message
   const mustStayDeterministic = intent === 'sales' || intent === 'connections' || intent === 'safety';
   const llm = mustStayDeterministic ? null : await generateWithRealAi({ message: clean, history, context: external.text, company, plan: plan.aiLevel });
   if (llm) {
-    const result: AiKernelResult = { reply: llm.text, intent, mode: 'llm', usageUnits, suggestedActions: external.dataSource === 'external-connector' ? ['Muéstrame mis clientes', 'Muéstrame mis citas', 'Analiza la operación'] : ['Investiga en Internet', '¿Qué tienes conectado?', 'Cómo conectar mi sistema'], dataSource: external.dataSource, provider: 'openai', model: llm.model, citations: llm.citations, webSearched: llm.webSearched };
+    const result: AiKernelResult = { agent, reply: llm.text, intent, mode: 'llm', usageUnits, suggestedActions: external.dataSource === 'external-connector' ? ['Muéstrame mis clientes', 'Muéstrame mis citas', 'Analiza la operación'] : ['Investiga en Internet', '¿Qué tienes conectado?', 'Cómo conectar mi sistema'], dataSource: external.dataSource, provider: 'openai', model: llm.model, citations: llm.citations, webSearched: llm.webSearched };
     appendAssistantMessage(tenantId, userId, 'assistant', result.reply); recordUsage(tenantId, 'assistant', usageUnits, { intent, dataSource: result.dataSource, mode: result.mode, provider: 'openai' }); return result;
   }
 
   const local = localReply(tenantId, intent, connected, company, plan, usage, external.text);
-  const result: AiKernelResult = { reply: local.reply, intent, mode: external.mode, usageUnits, suggestedActions: local.suggestedActions, dataSource: external.dataSource, provider: 'local-kernel', model: null };
+  const result: AiKernelResult = { agent, reply: local.reply, intent, mode: external.mode, usageUnits, suggestedActions: local.suggestedActions, dataSource: external.dataSource, provider: 'local-kernel', model: null };
   appendAssistantMessage(tenantId, userId, 'assistant', result.reply); recordUsage(tenantId, 'assistant', usageUnits, { intent, dataSource: result.dataSource, mode: result.mode, provider: 'local-kernel', realAiConfigured: isRealAiConfigured() });
   return result;
 }

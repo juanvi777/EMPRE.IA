@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState, type Dispatch, type ReactNode, type SetStateAction } from 'react';
+import IntegrationGuide from './integration-guide';
 
 export type ApiState =
   | { available: true; health: { environment: string; service: string; version: string } }
@@ -56,7 +57,7 @@ type ExternalAppointment = { id: string; client_name: string; service: string; a
 type ExternalSlot = string;
 type PendingApproval = { id: string; tool: string; input: Record<string, unknown>; status: string; createdAt: string };
 type ChatCitation = { title: string; url: string };
-type ChatMessage = { role: 'ai' | 'user'; text: string; citations?: ChatCitation[]; webSearched?: boolean };
+type ChatMessage = { role: 'ai' | 'user'; text: string; citations?: ChatCitation[]; webSearched?: boolean; agent?: string };
 type AiStatus = { configured: boolean; provider: 'openai' | 'local-kernel'; webSearchEnabled: boolean; webSearchMode: 'live' | 'disabled' };
 
 
@@ -167,7 +168,8 @@ function statusLabel(status: CompanyProfile['nitVerificationStatus']) {
 
 function ModuleView(props: {
   active: string;
-  chat: { role: 'user' | 'ai'; text: string }[];
+  chat: ChatMessage[];
+  setChat: Dispatch<SetStateAction<ChatMessage[]>>;
   input: string;
   setInput: (value: string) => void;
   sendMessage: (message?: string) => void;
@@ -197,8 +199,9 @@ function ModuleView(props: {
   connection: DashboardSummary['connection'];
   refreshConnection: () => Promise<void>;
 }) {
-  const { active, chat, input, setInput, sendMessage, taskDone, setTaskDone, agentsState, setAgentsState, integrationState, setIntegrationState, chatPending, summary, company, billing, planName, usageText, onPlanChange, onCheckout, refreshCompany, billingReturnMessage, apiBaseUrl, token, openModule, chatSuggestedActions, setChatSuggestedActions, clearChat, connection, refreshConnection, aiStatus } = props;
+  const { active, chat, setChat, input, setInput, sendMessage, taskDone, setTaskDone, agentsState, setAgentsState, integrationState, setIntegrationState, chatPending, summary, company, billing, planName, usageText, onPlanChange, onCheckout, refreshCompany, billingReturnMessage, apiBaseUrl, token, openModule, chatSuggestedActions, setChatSuggestedActions, clearChat, connection, refreshConnection, aiStatus } = props;
   const authHeaders = (extra: Record<string, string> = {}) => ({ authorization: token ? `Bearer ${token}` : '', ...extra });
+  const authedHeaders = authHeaders;
   const [clientQuery, setClientQuery] = useState('');
   const [analysisMessage, setAnalysisMessage] = useState('No hay una fuente externa conectada. EMPRE no ejecutará un análisis de negocio sin datos autorizados.');
   const [analysisRunning, setAnalysisRunning] = useState(false);
@@ -229,6 +232,21 @@ function ModuleView(props: {
   const [paymentMethodsMessage, setPaymentMethodsMessage] = useState('');
   const [paymentMethodsNotes, setPaymentMethodsNotes] = useState<string[]>([]);
   const [realAiProvider, setRealAiProvider] = useState<'openai' | 'local-kernel'>('local-kernel');
+
+  useEffect(() => {
+    function handleConnectorDraft(event: Event) {
+      const detail = (event as CustomEvent<{ targetUrl?: string; candidateEndpoints?: string[]; recommendedAuth?: string[] }>).detail;
+      if (!detail?.targetUrl) return;
+      const candidates = detail.candidateEndpoints ?? [];
+      const pickPath = (ending: string, fallback: string) => { const found = candidates.find((item) => item.endsWith(ending)); return found ? new URL(found).pathname : fallback; };
+      const recommended = detail.recommendedAuth ?? [];
+      const supported = recommended.find((item) => ['login', 'bearer', 'api_key', 'none'].includes(item)) as ConnectorSummary['authMode'] | undefined;
+      setConnectorForm((current) => ({ ...current, name: current.name || 'Sistema preparado por EMPRE', baseUrl: detail.targetUrl!, authMode: supported ?? 'login', healthPath: pickPath('/api/health', current.healthPath), verificationPath: pickPath('/api/me', current.verificationPath), loginPath: pickPath('/api/auth/login', current.loginPath) }));
+      setConnectorMessage('EMPRE aplicó el plan de descubrimiento al formulario. Revisa y completa la autenticación antes de conectar.');
+    }
+    window.addEventListener('empre:connector-draft', handleConnectorDraft);
+    return () => window.removeEventListener('empre:connector-draft', handleConnectorDraft);
+  }, []);
 
   useEffect(() => setCompanyDraft(company), [company]);
   useEffect(() => {
@@ -412,7 +430,7 @@ function ModuleView(props: {
     <section className="module-area">
       <div className="module-heading"><div><span className="section-kicker">CENTRO OPERATIVO</span><h1>{active}</h1><p>Los estados marcados como locales no representan conexiones externas reales.</p></div><div className="module-chip"><span className="footer-dot" /> Núcleo local</div></div>
 
-      {active === 'Chat con IA' && <div className="panel module-chat"><div className="panel-header"><div><span className="section-kicker">ASISTENTE</span><h2>Conversa con EMPRE.IA</h2></div><div className="button-row"><span className={`local-badge ${connection.connected ? 'connected-badge' : ''}`}>{realAiProvider === 'openai' ? 'Modelo LLM activo' : 'Núcleo conversacional local'} · {aiStatus.webSearchEnabled ? 'Web en vivo' : 'Sin web'} · {connection.connected ? 'Fuente conectada' : 'Sin fuente externa'}</span><button className="ghost-button" onClick={clearChat} disabled={chatPending}>Limpiar</button></div></div><div className="chat-thread large">{chat.map((item, index) => <div className={`chat-message ${item.role}`} key={`${item.role}-${index}`}><div className="chat-avatar">{item.role === 'ai' ? 'A' : 'TÚ'}</div><div><p>{item.text}</p>{item.role === 'ai' && item.webSearched && <span className="chat-web-badge">🌐 Investigación web en vivo</span>}{item.role === 'ai' && item.citations && item.citations.length > 0 && <div className="chat-sources"><strong>Fuentes</strong>{item.citations.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.title}</a>)}</div>}</div></div>)}{chatPending && <div className="chat-message ai"><div className="chat-avatar">A</div><p>{aiStatus.webSearchEnabled ? 'Pensando y, cuando sea necesario, investigando en Internet…' : 'Pensando con el núcleo…'}</p></div>}</div>{chatSuggestedActions.length > 0 && <div className="chat-suggestions">{chatSuggestedActions.map((action) => <button key={action} onClick={() => sendMessage(action)} disabled={chatPending}>{action}</button>)}</div>}<div className="module-composer"><Icon name="spark" /><input value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && sendMessage()} placeholder="Escribe una solicitud…"/><button onClick={() => sendMessage()} aria-label="Enviar" disabled={chatPending}><Icon name="send"/></button></div><div className="chat-disclaimer">EMPRE separa conversación, datos y ejecución: la IA no puede consultar ni modificar información externa hasta que exista un Connector verificado. Cuando hay un modelo LLM configurado, éste recibe sólo el contexto autorizado que EMPRE prepara. La búsqueda web, cuando está habilitada, usa la herramienta web del proveedor y muestra las fuentes obtenidas.</div></div>}
+      {active === 'Chat con IA' && <div className="panel module-chat"><div className="panel-header"><div><span className="section-kicker">ASISTENTE</span><h2>Conversa con EMPRE.IA</h2></div><div className="button-row"><span className={`local-badge ${connection.connected ? 'connected-badge' : ''}`}>{realAiProvider === 'openai' ? 'Modelo LLM activo' : 'Núcleo conversacional local'} · {aiStatus.webSearchEnabled ? 'Web en vivo' : 'Sin web'} · {connection.connected ? 'Fuente conectada' : 'Sin fuente externa'}</span><button className="ghost-button" onClick={clearChat} disabled={chatPending}>Limpiar</button></div></div><div className="chat-thread large">{chat.map((item, index) => <div className={`chat-message ${item.role}`} key={`${item.role}-${index}`}><div className="chat-avatar">{item.role === 'ai' ? 'A' : 'TÚ'}</div><div><p>{item.text}</p>{item.role === 'ai' && item.webSearched && <span className="chat-web-badge">🌐 Investigación web en vivo</span>}{item.role === 'ai' && item.agent && <span className="chat-agent-badge">🤖 {item.agent}</span>}{item.role === 'ai' && item.citations && item.citations.length > 0 && <div className="chat-sources"><strong>Fuentes</strong>{item.citations.map((source) => <a key={source.url} href={source.url} target="_blank" rel="noreferrer">{source.title}</a>)}</div>}</div></div>)}{chatPending && <div className="chat-message ai"><div className="chat-avatar">A</div><p>{aiStatus.webSearchEnabled ? 'Pensando y, cuando sea necesario, investigando en Internet…' : 'Pensando con el núcleo…'}</p></div>}</div>{chatSuggestedActions.length > 0 && <div className="chat-suggestions">{chatSuggestedActions.map((action) => <button key={action} onClick={() => sendMessage(action)} disabled={chatPending}>{action}</button>)}</div>}<div className="module-composer"><Icon name="spark" /><input value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && sendMessage()} placeholder="Escribe una solicitud…"/><button onClick={() => sendMessage()} aria-label="Enviar" disabled={chatPending}><Icon name="send"/></button></div><div className="chat-disclaimer">EMPRE separa conversación, datos y ejecución: la IA no puede consultar ni modificar información externa hasta que exista un Connector verificado. Cuando hay un modelo LLM configurado, éste recibe sólo el contexto autorizado que EMPRE prepara. La búsqueda web, cuando está habilitada, usa la herramienta web del proveedor y muestra las fuentes obtenidas.</div></div>}
 
       {active === 'Análisis' && <div className="module-grid two"><div className="panel module-card"><span className="module-icon cyan"><Icon name="chart" size={22}/></span><h2>{connection.connected ? 'Fuente conectada' : 'Acceso bloqueado'}</h2><p>{connection.connected ? analysisMessage : 'EMPRE no ejecutará análisis de negocio mientras no exista un Connector operativo y autorizado.'}</p><button className="primary-button" onClick={() => connection.connected ? runAnalysis() : openModule('Integraciones')} disabled={analysisRunning}>{analysisRunning ? 'Comprobando…' : connection.connected ? 'Comprobar acceso real' : 'Conectar una fuente'}</button></div><div className="panel module-card"><span className="module-icon purple"><Icon name="shield" size={22}/></span><h2>Regla de operación</h2><p>Una conexión válida habilita herramientas. Un dato no conectado no se puede analizar y un permiso no se asume.</p><div className="usage-box"><div><span>Uso IA</span><strong>{usageText}</strong></div><div><span>Sistema externo</span><strong>{connection.connected ? connection.primary?.name ?? 'Conectado' : 'No conectado'}</strong></div></div></div></div>}
 
@@ -655,6 +673,8 @@ function ModuleView(props: {
         </div>
       )}
 
+      {active === 'Agentes' && <div className="panel module-list-panel"><div className="panel-header"><div><span className="section-kicker">NÚCLEO MULTIAGENTE</span><h2>Agentes especializados</h2></div><span className="local-badge">Orquestador EMPRE</span></div><p className="core-intro">EMPRE separa responsabilidades: un orquestador decide qué agente participa y cada agente trabaja sólo con las herramientas que tiene autorizadas.</p><div className="agent-grid">{['General','Investigación web','Ventas','Clientes','Citas','Documentos','Automatizaciones','Sistema','Connector','Seguridad'].map((name) => <article className="agent-card" key={name}><span className="module-icon cyan"><Icon name="robot" size={18}/></span><strong>{name}</strong><small>Especialista</small></article>)}</div></div>}
+
       {active === 'Agentes' && connection.connected && <div className="panel module-list-panel"><div className="panel-header"><div><span className="section-kicker">ORQUESTACIÓN</span><h2>Agentes</h2></div><span className="local-badge">Connector operativo</span></div><div className="settings-list">{(summary?.agentsList ?? []).map((item) => { const running = agentsState[item.id] ?? item.status === 'active'; return <div className="setting-row" key={item.id}><span><strong>{item.name}</strong><small>{item.description} · {running ? 'Activo' : 'Pausado'}</small></span><button className={`toggle ${running ? 'on' : ''}`} onClick={() => onAgentToggle(item.id, running)} aria-label={`Cambiar ${item.name}`}><i/></button></div>; })}</div></div>}
 
       {active === 'Tareas' && connection.connected && <div className="panel module-list-panel"><div className="panel-header"><div><span className="section-kicker">EJECUCIÓN</span><h2>Tareas</h2></div><span className="local-badge">Connector operativo</span></div><div className="settings-list">{(summary?.recentTasks ?? []).map((item) => { const done = taskDone[item.id] ?? item.status === 'done'; return <button className="task-row module-task" key={item.id} onClick={() => onTaskToggle(item.id, done)}><span className={`task-check ${done ? 'done' : ''}`}>{done && <Icon name="check" size={12}/>}</span><span><strong>{item.title}</strong><small>{done ? 'Completada' : item.detail}</small></span></button>; })}</div></div>}
@@ -702,7 +722,7 @@ export default function Dashboard({ api, onLogout }: { api: ApiState; onLogout: 
   const [dark, setDark] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [query, setQuery] = useState('');
-  const [chat, setChat] = useState(initialChat);
+  const [chat, setChat] = useState(initialChat as ChatMessage[]);
   const [chatSuggestedActions, setChatSuggestedActions] = useState<string[]>(['¿Qué puedes hacer?', '¿Qué tienes conectado?', '¿Cuál es mi plan?']);
   const [input, setInput] = useState('');
   const [chatPending, setChatPending] = useState(false);
@@ -789,6 +809,7 @@ export default function Dashboard({ api, onLogout }: { api: ApiState; onLogout: 
   ];
   const searchResults = useMemo(() => { const q = query.trim().toLowerCase(); return q ? navItems.filter((item) => item.label.toLowerCase().includes(q)) : navItems.slice(0, 6); }, [query]);
   const openModule = (label: string) => { setActive(label); setQuery(''); setMobileOpen(false); setNotificationsOpen(false); setHelpOpen(false); setProfileOpen(false); };
+
   const refreshConnection = async () => {
     if (!token) return;
     const response = await fetch(`${apiBaseUrl}/connectors`, { headers: authedHeaders() });
@@ -801,10 +822,10 @@ export default function Dashboard({ api, onLogout }: { api: ApiState; onLogout: 
     setChat((prev) => [...prev, { role: 'user', text }]); setInput(''); setActive('Chat con IA'); setChatPending(true);
     try {
       const response = await fetch(`${apiBaseUrl}/assistant`, { method: 'POST', headers: authedHeaders({ 'content-type': 'application/json' }), body: JSON.stringify({ message: text }) });
-      const data = await response.json().catch(() => ({})) as { reply?: string; suggestedActions?: string[]; provider?: 'openai' | 'local-kernel'; citations?: ChatCitation[]; webSearched?: boolean };
+      const data = await response.json().catch(() => ({})) as { reply?: string; suggestedActions?: string[]; provider?: 'openai' | 'local-kernel'; citations?: ChatCitation[]; webSearched?: boolean; agent?: string };
       if (data.provider) setRealAiProvider(data.provider);
       if (!response.ok) throw new Error(data.reply ?? 'No se pudo procesar la solicitud.');
-      setChat((prev) => [...prev, { role: 'ai', text: data.reply ?? 'No recibí una respuesta del núcleo.', citations: Array.isArray(data.citations) ? data.citations : [], webSearched: Boolean(data.webSearched) }]);
+      setChat((prev) => [...prev, { role: 'ai', text: data.reply ?? 'No recibí una respuesta del núcleo.', citations: Array.isArray(data.citations) ? data.citations : [], webSearched: Boolean(data.webSearched), agent: data.agent }]);
       setChatSuggestedActions(Array.isArray(data.suggestedActions) ? data.suggestedActions : []);
     } catch (error) { setChat((prev) => [...prev, { role: 'ai', text: error instanceof Error ? error.message : 'No se pudo procesar la solicitud.' }]); }
     finally { setChatPending(false); }
@@ -853,14 +874,15 @@ export default function Dashboard({ api, onLogout }: { api: ApiState; onLogout: 
         {profileOpen && <div className="floating-popover profile-popover"><div className="popover-head"><strong>Mi cuenta</strong><button onClick={() => setProfileOpen(false)}><Icon name="close" size={15}/></button></div><p>{displayName} · {roleLabel} · {companyName}</p><button onClick={() => openModule('Configuración')}>Configuración <Icon name="arrow" size={14}/></button><button onClick={onLogout}>Cerrar sesión</button></div>}
       </header>
       <div className="page-content">
-        {active !== 'Inicio' ? <ModuleView active={active} chat={chat} input={input} setInput={setInput} sendMessage={sendMessage} taskDone={taskDone} setTaskDone={setTaskDone} agentsState={agentsState} setAgentsState={setAgentsState} integrationState={integrationState} setIntegrationState={setIntegrationState} chatPending={chatPending} summary={summary} company={company} billing={billing} planName={planName} usageText={usageText} onPlanChange={onPlanChange} onCheckout={onCheckout} refreshCompany={async () => { const response = await fetch(`${apiBaseUrl}/company/profile`, { headers: authedHeaders() }); if (response.ok) setCompany((await response.json()).company); }} billingReturnMessage={billingReturnMessage} apiBaseUrl={apiBaseUrl} token={token} openModule={openModule} chatSuggestedActions={chatSuggestedActions} setChatSuggestedActions={setChatSuggestedActions} clearChat={clearChat} connection={connection} refreshConnection={refreshConnection} aiStatus={aiStatus}/> : <>
+        {active !== 'Inicio' ? <ModuleView active={active} chat={chat} setChat={setChat} input={input} setInput={setInput} sendMessage={sendMessage} taskDone={taskDone} setTaskDone={setTaskDone} agentsState={agentsState} setAgentsState={setAgentsState} integrationState={integrationState} setIntegrationState={setIntegrationState} chatPending={chatPending} summary={summary} company={company} billing={billing} planName={planName} usageText={usageText} onPlanChange={onPlanChange} onCheckout={onCheckout} refreshCompany={async () => { const response = await fetch(`${apiBaseUrl}/company/profile`, { headers: authedHeaders() }); if (response.ok) setCompany((await response.json()).company); }} billingReturnMessage={billingReturnMessage} apiBaseUrl={apiBaseUrl} token={token} openModule={openModule} chatSuggestedActions={chatSuggestedActions} setChatSuggestedActions={setChatSuggestedActions} clearChat={clearChat} connection={connection} refreshConnection={refreshConnection} aiStatus={aiStatus}/> : <>
           <section className="hero panel"><div className="hero-copy"><p className="section-kicker">EMPRE.IA · CENTRO DE INTELIGENCIA</p><h1>Hola, <span>{displayName.split(' ')[0] ?? displayName}</span> <span className="wave">👋</span></h1><p className="hero-sub">{companyName} · {planName}. Estoy lista para ayudarte, pero nunca fingiré acceso a una fuente que no esté conectada.</p><div className="quick-actions"><button className={!connection.connected ? 'action-locked' : ''} onClick={() => connection.connected ? sendMessage('Analiza mis ventas de este mes') : openModule('Integraciones')}><Icon name="chart" size={17}/>Analizar ventas</button><button className={!connection.connected ? 'action-locked' : ''} onClick={() => connection.connected ? sendMessage('Crea un informe mensual') : openModule('Integraciones')}><Icon name="file" size={17}/>Preparar informe</button><button onClick={() => sendMessage('Qué tienes conectado')}><Icon name="integrations" size={17}/>Ver conexiones</button><button onClick={() => openModule('Mi empresa')}><Icon name="settings" size={17}/>Mi empresa</button></div><div className="prompt-box"><Icon name="spark"/><input value={input} onChange={(event) => setInput(event.target.value)} onKeyDown={(event) => event.key === 'Enter' && sendMessage()} placeholder="¿En qué puedo ayudarte hoy?"/><button aria-label="Enviar" onClick={() => sendMessage()}><Icon name="send" size={20}/></button></div><div className="suggestions">{['¿Qué puedes hacer?', '¿Qué tienes conectado?', 'Analiza mis ventas', '¿Qué diferencia a EMPRE?'].map((text) => <button key={text} onClick={() => sendMessage(text)}>{text}</button>)}</div></div><div className="hero-robot"><div className="robot-orbit orbit-one"/><div className="robot-orbit orbit-two"/><div className="robot-glow"/><img src="/empre-robot.png" alt="Robot asistente de EMPRE.IA"/><div className="robot-bubble"><strong>Hola, soy EMPRE.IA</strong><span>Primero verifico qué información y herramientas están disponibles. Después actúo.</span></div></div></section>
           <div className="kpi-grid">{liveKpis.map((kpi) => <article className={`kpi-card ${kpi.tone}`} key={kpi.label}><div className="kpi-head"><div className="kpi-icon"><Icon name={kpi.icon} size={18}/></div><span>{kpi.label}</span></div><strong>{kpi.value}</strong><div className="kpi-meta"><span>{kpi.detail}</span></div></article>)}</div>
           <section className="panel core-identity-panel"><div className="panel-header"><div><span className="section-kicker">EL ADN DE EMPRE.IA</span><h2>Una IA pensada para trabajar dentro de la empresa</h2></div><span className="local-badge">Fundamento del producto</span></div><p className="core-intro">EMPRE no se limita a conversar. Su arquitectura conecta inteligencia con contexto, herramientas, políticas, aprobaciones y evidencia.</p><div className="core-diff-grid">{differentiators.map(([title, description], index) => <article key={title}><span className="core-number">0{index + 1}</span><h3>{title}</h3><p>{description}</p></article>)}</div></section>
           <section className="dashboard-grid"><div className="panel integrations-panel"><div className="panel-header"><div><span className="section-kicker">CONECTORES</span><h2>Estado real de las conexiones</h2></div><button className="link-button" onClick={() => openModule('Integraciones')}>Ver todas <Icon name="arrow" size={14}/></button></div><div className="integration-list">{(summary?.integrations ?? []).slice(0, 4).map((item) => <button className="integration-row" key={item.id} onClick={() => openModule('Integraciones')}><span className="integration-icon cyan"><Icon name={(item.kind === 'whatsapp' ? 'whatsapp' : item.kind === 'email' ? 'mail' : item.kind === 'storage' ? 'file' : 'database') as IconName} size={18}/></span><span><strong>{item.name}</strong><small>{connection.connected ? externalText : 'No conectado'}</small></span><i className={`state-dot ${connection.connected ? 'green' : 'orange'}`}/><Icon name="arrow" size={15}/></button>)}</div></div><div className="panel activity-panel"><div className="panel-header"><div><span className="section-kicker">ESTADO</span><h2>Operación local</h2></div><span className="local-badge">Sin datos externos</span></div><div className="activity-list"><button className="activity-row" onClick={() => openModule('Mi empresa')}><span className="activity-icon cyan"><Icon name="settings" size={16}/></span><div><strong>{company?.legalSetupCompleted ? 'Datos legales configurados' : 'Datos legales pendientes'}</strong><small>{company?.legalSetupCompleted ? 'Perfil de empresa listo para revisión' : 'Completa el perfil de empresa'}</small></div><Icon name="arrow" size={14}/></button><button className="activity-row" onClick={() => openModule('Planes y facturación')}><span className="activity-icon purple"><Icon name="chart" size={16}/></span><div><strong>Plan {planName}</strong><small>Uso IA: {usageText}</small></div><Icon name="arrow" size={14}/></button><button className="activity-row" onClick={() => openModule('Integraciones')}><span className="activity-icon orange"><Icon name="integrations" size={16}/></span><div><strong>{summary?.integrations.length ?? 0} conectores disponibles</strong><small>Ninguno conectado externamente todavía</small></div><Icon name="arrow" size={14}/></button></div></div></section>
         </>}
-        <footer className="footer"><span>EMPRE.IA · Centro de inteligencia empresarial · Modo local</span><span><i className="footer-dot"/> {apiText} · v0.5.2</span></footer>
+        <footer className="footer"><span>EMPRE.IA · Centro de inteligencia empresarial · Modo local</span><span><i className="footer-dot"/> {apiText} · v0.7.0</span></footer>
       </div>
     </main>
+    <IntegrationGuide apiBaseUrl={apiBaseUrl} token={token} canPrepare={currentUser?.role === 'owner' || currentUser?.role === 'admin'} openIntegrations={() => openModule('Integraciones')} />
   </div>;
 }

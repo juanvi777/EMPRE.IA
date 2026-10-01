@@ -51,10 +51,14 @@ Para activar la conversación real y la investigación web, configura `OPENAI_AP
 EMPRE usa un Connector universal para APIs REST/JSON. No existe acceso mágico a cualquier página web: el sistema externo debe exponer una API, OAuth, credenciales de integración, un manifest o un adaptador específico. EMPRE valida salud, identidad, capacidades y permisos antes de operar.
 
 
-## 0.6.0 — web launch foundation
+## 0.7.0 — web launch foundation
 
 - cuenta única de propietario de plataforma en `/platform`;
 - asignación manual de planes por empresa;
 - persistencia en Railway Volume compatible con `RAILWAY_VOLUME_MOUNT_PATH`;
 - API preparada para `PORT` y `0.0.0.0` en producción;
 - guía de despliegue Railway + Vercel.
+
+
+## 0.7.0 — Multiagente + Guía de integración
+EMPRE incorpora un registro de agentes especializados y un asistente de preparación de integraciones por solicitud del propietario. En la esquina aparece el robot flotante **Guía**, con ayuda interactiva y enlace al PowerPoint `apps/web/public/guides/EMPREIA-GUIA-INTEGRACION.pptx`.
