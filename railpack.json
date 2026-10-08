@@ -7,7 +7,7 @@
   },
   "steps": {
     "install": {
-      "commands": ["pnpm install --frozen-lockfile"]
+      "commands": ["pnpm install"]
     },
     "build": {
       "inputs": [{ "step": "install" }],
