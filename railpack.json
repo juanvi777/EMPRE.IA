@@ -7,14 +7,14 @@
   },
   "steps": {
     "install": {
-      "commands": ["pnpm install"]
+      "commands": ["pnpm install --frozen-lockfile"]
     },
     "build": {
       "inputs": [{ "step": "install" }],
-      "commands": ["pnpm build"]
+      "commands": ["pnpm --filter @empre/api build"]
     }
   },
   "deploy": {
-    "startCommand": "pnpm dev"
+    "startCommand": "pnpm --filter @empre/api start"
   }
 }
