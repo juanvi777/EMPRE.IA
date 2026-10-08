@@ -1,0 +1,20 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "node": "24",
+    "pnpm": "12.6.0"
+  },
+  "steps": {
+    "install": {
+      "commands": ["pnpm install"]
+    },
+    "build": {
+      "inputs": [{ "step": "install" }],
+      "commands": ["pnpm build"]
+    }
+  },
+  "deploy": {
+    "startCommand": "pnpm dev"
+  }
+}
